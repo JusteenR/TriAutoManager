@@ -21,7 +21,7 @@ app.get('/', (req, res) => {
     res.end()
 })
 
-app.post('/', (req, res) => {
+app.post('/vitals', (req, res) => {
   temp = req.body.temperature
   res.status(200).json({ message: "It worked!" });
 });
