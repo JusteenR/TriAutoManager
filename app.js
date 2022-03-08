@@ -15,7 +15,7 @@ var temp = 0
 app.get('/status', (req, res) => {
  
     // Sending the response
-    res.send(JSON.stringify({ status: 1 }))
+    res.send("1")
     
     // Ending the response
     res.end()
