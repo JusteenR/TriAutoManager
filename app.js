@@ -12,10 +12,10 @@ app.use(express.json());
 var temp = 0
  
 // Getting Request
-app.get('/', (req, res) => {
+app.get('/status', (req, res) => {
  
     // Sending the response
-    res.send('Hello World!!!' + temp.toString())
+    res.send(JSON.stringify({ status: 1 }))
     
     // Ending the response
     res.end()
