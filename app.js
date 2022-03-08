@@ -21,6 +21,16 @@ app.get('/status', (req, res) => {
     res.end()
 })
 
+// Getting Request
+app.get('/', (req, res) => {
+ 
+  // Sending the response
+  res.send('Hello World!!!' + temp.toString())
+  
+  // Ending the response
+  res.end()
+})
+
 app.post('/vitals', (req, res) => {
   temp = req.body.temperature
   res.status(200).json({ message: "It worked!" });
