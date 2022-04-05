@@ -4,7 +4,7 @@ const mysql = require("mysql");
 
 /** Section below expose secrets, indicating private information regarding database for developers only. In real world application */
 /** Database information would not be leaked and would go through numerous security protocols to establish proper information hiding.  **/
-var mysqlConnection = mysql.createConnection({
+var mysqlConnection = mysql.createPool({
     host: "us-cdbr-east-05.cleardb.net",
     user : "b7498e9daf3e28" ,
     password: "30433a5c",
