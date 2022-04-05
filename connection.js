@@ -13,20 +13,6 @@ var mysqlConnection = mysql.createPool({
 });
 
 
-mysqlConnection.connect((err) => {
-    if(!err)
-    {
-        console.log("Connected");
-    }
-    else 
-    {
-        console.log(err);
-        console.log("Connection Failed");
-    }
-
-
-
-})
 
 module.exports = mysqlConnection;
 
