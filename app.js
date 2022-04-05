@@ -35,7 +35,7 @@ app.get("/visitation", (req, res) => {
     }
   })
   
-  connection.end();
+  mysqlConnection.end();
     // mysqlConnection.query("SELECT triagestation, firstname, lastname, ohip, vid, approval FROM patient_profile JOIN (SELECT max(VisitID) as vid, ohip, triagestation, approval FROM visitation_information WHERE approval='False' GROUP BY(ohip))v2 USING (ohip);", (err, rows, fields)=>{
     //   if (!err){ res.send("hi");
     // console.log()}
