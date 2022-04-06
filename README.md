@@ -1,2 +1,2 @@
 # TriAutoManager
-Capstone 
+Backend server for our TriAuto System
