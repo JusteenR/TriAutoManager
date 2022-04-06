@@ -5,7 +5,7 @@ const app = express();
 const path = require("path");
 const fs = require("fs");
 const cors = require("cors");
-const mysqlConnection = require("./connection");
+const pool = require("./connection");
 
 app.use(cors());
 
@@ -23,43 +23,60 @@ app.get('/status', (req, res) => {
 })
 
 app.get("/visitation", (req, res) => {
-  mysqlConnection.connect();
- 
-  mysqlConnection.query("SELECT triagestation, firstname, lastname, ohip, vid, approval FROM patient_profile JOIN (SELECT max(VisitID) as vid, ohip, triagestation, approval FROM visitation_information WHERE approval='False' GROUP BY(ohip))v2 USING (ohip);", (err, rows, fields)=>{
-    if (!err){ 
-      res.send(rows);
-      console.log()
-    }
-    else { 
-      console.log(err); 
-    }
-  })
-  
-  mysqlConnection.end();
-    // mysqlConnection.query("SELECT triagestation, firstname, lastname, ohip, vid, approval FROM patient_profile JOIN (SELECT max(VisitID) as vid, ohip, triagestation, approval FROM visitation_information WHERE approval='False' GROUP BY(ohip))v2 USING (ohip);", (err, rows, fields)=>{
-    //   if (!err){ res.send("hi");
-    // console.log()}
-    //   else { console.log(err); }
+  pool.getConnection(function(err, connection) {
+    if (err) throw err; 
+
+    connection.query("SELECT triagestation, firstname, lastname, ohip, vid, approval FROM patient_profile JOIN (SELECT max(VisitID) as vid, ohip, triagestation, approval FROM visitation_information WHERE approval='False' GROUP BY(ohip))v2 USING (ohip);", (err, rows, fields)=>{
+      if (!err){ 
+        res.send(rows);
+        connection.release();
+      }
+      else { 
+        console.log(err); 
+      }
+    })
+  });
 });
 
-// app.get("/details/:patient", (req, res) => {
-//   var ohip = req.params.patient;
-//   var sql = "SELECT patient_profile.ohip AS ohip, firstname, lastname, patientsex, patientdob, PatientPhoneNumber, PatientAddress, PatientEmail, PatientHeight, PatientWeight, PatientAllergies, PatientMedication, PatientExistingConditions, PatientBloodPressure, PatientBloodOxygen, PatientHeartRate, PatientTemperature, PatientRiskLevel, approval, ChiefComplaint, PatientComplaint,PatientPainLevel, PatientSymptomList, arrivaldate FROM patient_profile JOIN visitation_information ON patient_profile.ohip = visitation_information.ohip JOIN patient_complaint ON patient_complaint.ohip = visitation_information.ohip HAVING ohip='"+ohip+"' ORDER BY arrivaldate DESC LIMIT 1";
-//   mysqlConnection.query(sql, (err, rows, fields)=>{
-//    if (!err){ res.send(rows);}
-//    else { console.log(err); }
-//  })
-// });
+app.get("/details/:patient", (req, res) => {
+  var ohip = req.params.patient;
+  var sql = "SELECT patient_profile.ohip AS ohip, firstname, lastname, patientsex, patientdob, PatientPhoneNumber, PatientAddress, PatientEmail, PatientHeight, PatientWeight, PatientAllergies, PatientMedication, PatientExistingConditions, PatientBloodPressure, PatientBloodOxygen, PatientHeartRate, PatientTemperature, PatientRiskLevel, approval, ChiefComplaint, PatientComplaint,PatientPainLevel, PatientSymptomList, arrivaldate FROM patient_profile JOIN visitation_information ON patient_profile.ohip = visitation_information.ohip JOIN patient_complaint ON patient_complaint.ohip = visitation_information.ohip HAVING ohip='"+ohip+"' ORDER BY arrivaldate DESC LIMIT 1";
 
-// app.post('/approval', (req, res) => {
-//   let approvedRisk = req.body.risk;
-//   let ohip = req.body.ohip;
-//   let sql = "UPDATE visitation_information SET approval='True', patientrisklevel='" + approvedRisk + "' WHERE ohip='" + ohip + "' ORDER BY visitid DESC LIMIT 1;"
-//   mysqlConnection.query(sql, (err, rows, fields)=>{
-//     if (!err){ res.send(rows);}
-//     else { console.log(err); }
-//   })
-// });
+  pool.getConnection(function(err, connection){
+    if (err) throw err;
+
+    connection.query(sql, (err, rows, fields)=>{
+      if (!err){
+         res.send(rows);
+         connection.release();
+        }
+      else { 
+        console.log(err); 
+      }
+    })
+  })
+});
+
+app.post('/approval', (req, res) => {
+  let approvedRisk = req.body.risk;
+  let ohip = req.body.ohip;
+  let sql = "UPDATE visitation_information SET approval='True', patientrisklevel='" + approvedRisk + "' WHERE ohip='" + ohip + "' ORDER BY visitid DESC LIMIT 1;"
+  
+  pool.getConnection(function(err, connection){
+    if (err) throw err;
+
+    connection.query(sql, (err, rows, fields)=>{
+      if (!err){
+         res.send(rows);
+         connection.release();
+        }
+      else { 
+        console.log(err); 
+      }
+    })
+  })
+  
+});
 
 // Getting Request
 app.get('/', (req, res) => {

@@ -4,7 +4,7 @@ const mysql = require("mysql");
 
 /** Section below expose secrets, indicating private information regarding database for developers only. In real world application */
 /** Database information would not be leaked and would go through numerous security protocols to establish proper information hiding.  **/
-var mysqlConnection = mysql.createConnection({
+var pool = mysql.createPool({
     host: "us-cdbr-east-05.cleardb.net",
     user : "b7498e9daf3e28" ,
     password: "30433a5c",
@@ -13,6 +13,6 @@ var mysqlConnection = mysql.createConnection({
 });
 
 
-module.exports = mysqlConnection;
+module.exports = pool;
 
 //mysql://b7498e9daf3e28:30433a5c@us-cdbr-east-05.cleardb.net/heroku_2a149538abd113b?reconnect=true
