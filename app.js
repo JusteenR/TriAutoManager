@@ -6,10 +6,15 @@ const path = require("path");
 const fs = require("fs");
 const cors = require("cors");
 const pool = require("./connection");
+const listPatientRoutes = require("./routes/patientList");
+const listComplaintRoutes = require("./routes/complaintList");
 
 app.use(cors());
-
 app.use(express.json());
+app.use("/patientList",listPatientRoutes);
+app.use("/complaintList",listComplaintRoutes);
+
+
 var temp = 0
  
 // Getting Request
