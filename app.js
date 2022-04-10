@@ -9,13 +9,14 @@ const pool = require("./connection");
 const listPatientRoutes = require("./routes/patientList");
 const listComplaintRoutes = require("./routes/complaintList");
 const listNurseRoutes = require("./routes/nurseList");
+const listVitalRoutes = require("./routes/vitalList");
 
 app.use(cors());
 app.use(express.json());
 app.use("/patientList",listPatientRoutes);
 app.use("/complaintList",listComplaintRoutes);
 app.use("/nurseList",listNurseRoutes);
-
+app.use("/vitalList",listVitalRoutes);
 
 var temp = 0
  
