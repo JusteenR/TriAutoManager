@@ -14,6 +14,20 @@ Router.get("/:ohip",(req,res)=>{
     
         connection.query(`select * from  patient_complaint WHERE OHIP ='${OHIP}'`, (err, rows, fields)=>{
             if (!err){ res.send(rows);
+                console.log(rows);
+                console.log("Complaint Updated")
+                ;}
+            else { console.log(err); }
+        })
+      })
+});
+/// gets ctas and cedis levels 
+Router.get("/riskcalculateCEDISCTAS/:ohip",(req,res)=>{
+    const OHIP =  req.params.ohip
+    pool.getConnection(function(err, connection){
+        if (err) throw err;
+        connection.query(`select PatientComplaint, PatientCtasLevel from  patient_complaint WHERE OHIP ='${OHIP}'`, (err, rows, fields)=>{
+            if (!err){ res.send(rows);
                 console.log(rows)
                 ;}
             else { console.log(err); }
@@ -38,7 +52,7 @@ Router.post("/create",(req,res)=>{
     
         connection.query("INSERT INTO patient_complaint(OHIP,VisitID, PatientComplaint, PatientCtasLevel, ComplaintEvent, PatientPainLevel, PatientSymptomList, PatientComments) VALUES (?,?,?,?,?,?,?,?)",
         [OHIP,VisitID, PatientComplaint, PatientCtasLevel, ComplaintEvent, PatientPainLevel, PatientSymptomList, PatientComments],
-        (err,result) => {if (err) {console.log(err);} else {console.log("values inserted")}}
+        (err,result) => {if (err) {console.log(err);} else {console.log("Values Inserted")}}
         );
       })
 });

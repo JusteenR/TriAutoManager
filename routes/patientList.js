@@ -17,6 +17,19 @@ Router.get("/:ohip",(req,res)=>{
       })
 });
 
+Router.get("/riskcalculateDOB/:ohip",(req,res)=>{
+    const OHIP =  req.params.ohip
+
+    pool.getConnection(function(err, connection){
+        if (err) throw err;
+    
+        connection.query(`select FLOOR((TO_DAYS(DATE(NOW())) - TO_DAYS(patientDOB))/365.25) AS Age from patient_profile WHERE OHIP ='${OHIP}'`, (err, rows, fields)=>{
+            if (!err){ res.send(rows); console.log(rows)}
+            else { console.log(err); }
+        })
+      })
+});
+
 //adds to database
 Router.post("/create",(req,res)=>{
     const OHIP = req.body.patientProfile.OHIP
