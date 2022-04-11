@@ -24,10 +24,15 @@ Router.get('/collectionReady', (req, res) => {
   if (collectionReady == 1){
     res.send('1');
     collectionReady = 0
-  } else {
-    res.send('0')
+  } else if (collectionReady == 2){
+    res.send('2');
+    collectionReady = 0
+  } else if (collectionReady == 3){
+    res.send('3');
+    collectionReady = 0
   }
 });
+
 
 
 // Front end makes continuos get request to check if there is a start
@@ -127,24 +132,26 @@ Router.put("/riskLevelUpdate",(req,res)=>{
 // Embedded to backend
 Router.post('/status', (req, res) => {
 
-  const es_response = req.body.es_response
+  let es_response = req.body.es_response
+  es_response = JSON.stringify(es_response)
 
   if (status == 1){
     // Start data collection
-    if (Object.keys(es_response).length === 0){
+    if (es_response == 0){
+      frontEndSignal = 1
       res.send('1')
     } else if (es_response == 1){
       // Start frontend data collection screen but not allow user to click submit
-      frontEndSignal = 1
-      status = 0 
+      collectionReady = 1
     } else if (es_response == 2){
-      // Send front end signal there is an error
-      frontEndSignal = 3
-      status = 0
+      // Help signal
+      collectionReady = 2
+      res.send('2')
+      status = 0 
     } else if (es_response == 3){
       // Send signal to the nurse interface there is an error
-      frontEndSignal = 2
-      status = 0
+      collectionReady = 3
+      status = 0 
     }
   }
 
