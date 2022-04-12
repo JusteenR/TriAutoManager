@@ -47,23 +47,6 @@ Router.get('/beginCollectionFront', (req, res) => {
   }
 });
 
-// Gets temperature and blood oxygen from the MCU 
-Router.post('/vitals', (req, res) => {
-  const temperature = req.body.temperature
-  const bloodOxygen = req.body.bloodOxygen
-
-  connection.query(`UPDATE visitation_information AS v1, (SELECT visitid FROM visitation_information WHERE ohip = '${ohip}' ORDER BY visitid DESC LIMIT 1) AS v2
-         SET PatientTemperature = '${temperature}', PatientBloodOxygen = '${bloodOxygen}' WHERE v1.visitid = v2.visitid`,(err,result)=> {
-            if (err) {console.log(err);} 
-            else {
-                res.send('result')
-                console.log("vital signs updated")
-            }} );
-
-  // Tell front end the submit value is now clickable
-  collectionReady = 1
-});
-
 
 Router.get("/vital/:ohip", (req, res) => {
     const OHIP =  req.params.ohip
@@ -222,7 +205,24 @@ Router.post('/status', (req, res) => {
   }
 
 
-})
+});
+
+// Gets temperature and blood oxygen from the MCU 
+Router.post('/vitals', (req, res) => {
+  const temperature = req.body.temperature
+  const bloodOxygen = req.body.bloodOxygen
+
+  connection.query(`UPDATE visitation_information AS v1, (SELECT visitid FROM visitation_information WHERE ohip = '${ohip}' ORDER BY visitid DESC LIMIT 1) AS v2
+         SET PatientTemperature = '${temperature}', PatientBloodOxygen = '${bloodOxygen}' WHERE v1.visitid = v2.visitid`,(err,result)=> {
+            if (err) {console.log(err);} 
+            else {
+                res.send('result')
+                console.log("vital signs updated")
+            }} );
+
+  // Tell front end the submit value is now clickable
+  collectionReady = 1
+});
 
 
 /*
