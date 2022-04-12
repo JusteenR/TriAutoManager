@@ -112,6 +112,8 @@ Router.post('/status', (req, res) => {
   let es_response = req.body.es_response
   console.log(es_response)
 
+  res.send('1')
+
   if(es_response == '0'){} //do nothing
 
   else if(es_response == '1') //confirmation
@@ -291,6 +293,7 @@ Router.put("/riskLevelUpdate",(req,res)=>{
     })
 });
 
+// Testing endpoint not truly used
 // Embedded to backend
 Router.get('/statusESP/:esp_response', (req, res) => {
 
