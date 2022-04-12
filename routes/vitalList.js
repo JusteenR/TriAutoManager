@@ -199,13 +199,17 @@ Router.post('/vitals', (req, res) => {
   const temperature = req.body.temperature
   const bloodOxygen = req.body.bloodOxygen
 
-  connection.query(`UPDATE visitation_information AS v1, (SELECT visitid FROM visitation_information WHERE ohip = '${ohip}' ORDER BY visitid DESC LIMIT 1) AS v2
-         SET PatientTemperature = '${temperature}', PatientBloodOxygen = '${bloodOxygen}' WHERE v1.visitid = v2.visitid`,(err,result)=> {
-            if (err) {console.log(err);} 
-            else {
-                res.send('result')
-                console.log("vital signs updated")
-            }} );
+  pool.getConnection(function(err, connection){
+    if (err) throw err;
+
+    connection.query(`UPDATE visitation_information AS v1, (SELECT visitid FROM visitation_information WHERE ohip = '${ohip}' ORDER BY visitid DESC LIMIT 1) AS v2
+          SET PatientTemperature = '${temperature}', PatientBloodOxygen = '${bloodOxygen}' WHERE v1.visitid = v2.visitid`,(err,result)=> {
+              if (err) {console.log(err);} 
+              else {
+                  res.send('result')
+                  console.log("vital signs updated")
+              }} );
+          })
 
   // Sends MCU message that the vital signs are added to the database
   status = '8'
