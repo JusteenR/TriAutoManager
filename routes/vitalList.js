@@ -1,10 +1,10 @@
 const express = require("express");
 const Router = express.Router();
 const pool = require("../connection");
-var status = '1'
+var status = '0'
 var frontEndSignal = '0'
 var ohip = null
-var collectionReady = '0'
+var collectionReady = 0
 
 
 
@@ -17,19 +17,45 @@ Router.post('/collection', (req, res) => {
 Router.post('/beginCollection', (req, res) => {
   // Tells front end to display collecting vital sign page but for not allow them to click submit
   res.send(frontEndSignal)
+
 });
 
 // Allows user to submit vital sign info, front end makes get request to this endpoint
 Router.get('/collectionReady', (req, res) => {
-  res.send(collectionReady)
+  if (collectionReady == 1){
+    res.send('1');
+    collectionReady = 0
+  } else if (collectionReady == 2){
+    res.send('2');
+    collectionReady = 0
+  } else if (collectionReady == 3){
+    res.send('3');
+    collectionReady = 0
   }
-);
+});
 
 
 
 // Front end makes continuos get request to check if there is a start
 Router.get('/beginCollectionFront', (req, res) => {
   res.send(frontEndSignal)
+});
+
+// Gets temperature and blood oxygen from the MCU 
+Router.post('/vitals', (req, res) => {
+  const temperature = 90
+  const bloodOxygen = 40
+
+  connection.query(`UPDATE visitation_information AS v1, (SELECT visitid FROM visitation_information WHERE ohip = '${ohip}' ORDER BY visitid DESC LIMIT 1) AS v2
+         SET PatientTemperature = '${temperature}', PatientBloodOxygen = '${bloodOxygen}' WHERE v1.visitid = v2.visitid`,(err,result)=> {
+            if (err) {console.log(err);} 
+            else {
+                res.send('result')
+                console.log("vital signs updated")
+            }} );
+
+  // Tell front end the submit value is now clickable
+  collectionReady = 1
 });
 
 
@@ -71,7 +97,7 @@ Router.get("/vital/:ohip", (req, res) => {
         if (err) throw err;
     
         connection.query(`UPDATE visitation_information AS v1, (SELECT visitid FROM visitation_information WHERE ohip = '${OHIP}' ORDER BY visitid DESC LIMIT 1) AS v2
-         SET PatientBloodPressure = '${PatientBloodPressure}', PatientHeartRate = '${PatientHeartRate}' WHERE v1.visitid = v2.visitid`,(err,result)=> {
+         SET PatientBloodPressure = '${PatientBloodPressure}', PatientHeartRate = '${PatientHeartRate}', PatientTemperature = 40, PatientBloodOxygen = 90 WHERE v1.visitid = v2.visitid`,(err,result)=> {
             if (err) {console.log(err);} 
             else {
                 res.send(result)
@@ -87,8 +113,7 @@ Router.put("/riskLevelUpdate",(req,res)=>{
     pool.getConnection(function(err, connection){
         if (err) throw err;
     
-        connection.query(`UPDATE visitation_information AS v1, (SELECT visitid FROM visitation_information WHERE ohip = '${OHIP}' ORDER BY visitid DESC LIMIT 1) AS v2
-         SET PatientRiskLevel= '${PatientRiskLevel}' WHERE v1.visitid = v2.visitid)`,(err,result)=> {
+        connection.query(`UPDATE visitation_information AS v1, (SELECT visitid FROM visitation_information WHERE ohip = '${OHIP}' ORDER BY visitid DESC LIMIT 1) AS v2 SET PatientRiskLevel= '${PatientRiskLevel}' WHERE v1.visitid = v2.visitid`,(err,result)=> {
             if (err) {console.log(err);} 
             else {
                 res.send(result)
@@ -98,21 +123,12 @@ Router.put("/riskLevelUpdate",(req,res)=>{
 });
 
 // Embedded to backend
-
-Router.get('/status/:es_response', (req, res) => {
-  console.log('Received poll from embedded\n')
-  console.log('Sent status: ')
-  console.log(status)
-  res.send(status)
-})
-
-
 Router.post('/status', (req, res) => {
   console.log('Received signal from embedded: ')
   let es_response = req.body.es_response
   console.log(es_response)
 
-  res.send('1')
+  //res.send('1')
 
   if(es_response == '0'){} //do nothing
 
@@ -121,6 +137,9 @@ Router.post('/status', (req, res) => {
     //sent begin collection
     if(status=='1')
     {
+      frontEndSignal = '1'
+      console.log(frontEndSignal === '1')
+      //res.send(frontEndSignal)
       /* Update Frontend: 
       Display "Running measurement routine"
       Display "When complete, enter blood pressure and heart rate values from screen."
@@ -191,148 +210,14 @@ Router.post('/status', (req, res) => {
     //Report error to frontend
   }
 
+  res.send('1')
+
 
 });
 
-// Gets temperature and blood oxygen from the MCU 
-Router.post('/vitals', (req, res) => {
-  const temperature = req.body.temperature
-  const bloodOxygen = req.body.bloodOxygen
-
-  pool.getConnection(function(err, connection){
-    if (err) throw err;
-
-    connection.query(`UPDATE visitation_information AS v1, (SELECT visitid FROM visitation_information WHERE ohip = '${ohip}' ORDER BY visitid DESC LIMIT 1) AS v2
-          SET PatientTemperature = '${temperature}', PatientBloodOxygen = '${bloodOxygen}' WHERE v1.visitid = v2.visitid`,(err,result)=> {
-              if (err) {console.log(err);} 
-              else {
-                  res.send('result')
-                  console.log("vital signs updated")
-              }} );
-          })
-
-  // Sends MCU message that the vital signs are added to the database
-  status = '8'
-  // Tell front end the submit value is now clickable
-  collectionReady = '1'
-});
 
 
-/*
-Router.post('/status', (req, res) => {
 
-  let es_response = req.body.es_response
-  es_response = JSON.stringify(es_response)
-
-  if (status == 1){
-    // Start data collection
-    if (es_response == 0){
-      frontEndSignal = 1
-      res.send('1')
-    } else if (es_response == 1){
-      // Start frontend data collection screen but not allow user to click submit
-      collectionReady = 1
-    } else if (es_response == 2){
-      // Help signal
-      collectionReady = 2
-      res.send('2')
-      status = 0 
-    } else if (es_response == 3){
-      // Send signal to the nurse interface there is an error
-      collectionReady = 3
-      status = 0 
-    }
-  }
-
-  
-  // Ending the response
-  res.end()
-})
-
-*/
-
-Router.post("/createvital",(req,res)=>{
-  const OHIP = req.body.patientOhip
-  pool.getConnection(function(err, connection){
-      if (err) throw err;
-  
-      connection.query(`INSERT INTO visitation_information (OHIP,PatientBloodPressure, PatientBloodOxygen, PatientHeartRate, PatientTemperature, PatientRiskLevel) VALUES ('${OHIP}',0,0,0,0,0)`,
-      (err,result) => {if (err) {console.log(err);} else {res.send("Values Inserted into Visitation_information")}}
-      );
-    })
-  });
-
-Router.put("/vitalUpdate",(req,res)=>{
-  const OHIP = req.body.ohipNum
-  const PatientBloodPressure = req.body.vitalSigns.PatientBloodPressureSys + ',' + req.body.vitalSigns.PatientBloodPressureDia; 
-  const PatientHeartRate = req.body.vitalSigns.PatientHeartRate;
-
-  pool.getConnection(function(err, connection){
-      if (err) throw err;
-  
-      connection.query(`UPDATE visitation_information AS v1, (SELECT visitid FROM visitation_information WHERE ohip = '${OHIP}' ORDER BY visitid DESC LIMIT 1) AS v2
-       SET PatientBloodPressure = '${PatientBloodPressure}', PatientHeartRate = '${PatientHeartRate}' WHERE v1.visitid = v2.visitid`,(err,result)=> {
-          if (err) {console.log(err);} 
-          else {
-              res.send(result)
-              console.log("vital signs updated")
-          }} );
-    })
-});
-
-Router.put("/riskLevelUpdate",(req,res)=>{
-  const OHIP = req.body.OHIP
-  const PatientRiskLevel = req.body.RiskLevel 
-
-  pool.getConnection(function(err, connection){
-      if (err) throw err;
-  
-      connection.query(`UPDATE visitation_information AS v1, (SELECT visitid FROM visitation_information WHERE ohip = '${OHIP}' ORDER BY visitid DESC LIMIT 1) AS v2
-       SET PatientRiskLevel= '${PatientRiskLevel}' WHERE v1.visitid = v2.visitid)`,(err,result)=> {
-          if (err) {console.log(err);} 
-          else {
-              res.send(result)
-              console.log("risk Level updated")
-          }} );
-    })
-});
-
-// Testing endpoint not truly used
-// Embedded to backend
-Router.get('/statusESP/:esp_response', (req, res) => {
-
-  let esp_response = req.params.esp_response
-  //esp_response = JSON.stringify(esp_response)
-  console.log(esp_response==="1")
-
-  if (status == '1'){
-    // Start data collection
-    if (esp_response === "0"){
-      frontEndSignal = 1
-      res.send('0')
-    } else if (esp_response === "1"){
-      // Start frontend data collection screen but not allow user to click submit
-      collectionReady = 1
-      res.send('1')
-    } else if (esp_response === "2"){
-      // Help signal
-      collectionReady = 2
-      status = 1
-      res.send('2')
-      //status = 0 
-    } else if (esp_response === "3"){
-      // Send signal to the nurse interface there is an error
-      collectionReady = 3
-      status = 1
-      //status = 0 
-      res.send('3')
-    }
-  }
-
-
-  // Ending the response
-  res.end()
-})
 /*
 Router.get("/details/:patient", (req, res) => {
     var ohip = req.params.patient;
