@@ -47,23 +47,6 @@ Router.get('/beginCollectionFront', (req, res) => {
   }
 });
 
-// Gets temperature and blood oxygen from the MCU 
-Router.post('/vitals', (req, res) => {
-  const temperature = req.body.temperature
-  const bloodOxygen = req.body.bloodOxygen
-
-  connection.query(`UPDATE visitation_information AS v1, (SELECT visitid FROM visitation_information WHERE ohip = '${ohip}' ORDER BY visitid DESC LIMIT 1) AS v2
-         SET PatientTemperature = '${temperature}', PatientBloodOxygen = '${bloodOxygen}' WHERE v1.visitid = v2.visitid`,(err,result)=> {
-            if (err) {console.log(err);} 
-            else {
-                res.send('result')
-                console.log("vital signs updated")
-            }} );
-
-  // Tell front end the submit value is now clickable
-  collectionReady = 1
-});
-
 
 Router.get("/vital/:ohip", (req, res) => {
     const OHIP =  req.params.ohip
@@ -130,6 +113,119 @@ Router.put("/riskLevelUpdate",(req,res)=>{
 });
 
 // Embedded to backend
+
+Router.get('/status', (req, res) => {
+  console.log('Received poll from embedded\n')
+  res.send(status)
+  console.log('Sent status: ')
+  console.log(status)
+})
+
+
+Router.post('/status', (req, res) => {
+  console.log('Received signal from embedded: ')
+  let es_response = req.body.es_response
+  console.log(es_response)
+
+  if(es_response == 0){} //do nothing
+
+  else if(es_response == 1) //confirmation
+  {
+    //sent begin collection
+    if(status==1)
+    {
+      /* Update Frontend: 
+      Display "Running measurement routine"
+      Display "When complete, enter blood pressure and heart rate values from screen."
+      Display input fields for blood pressure & hr
+      */
+    }
+
+    //sent measure blood pressure
+    if(status==2){
+      /* Update Frontend:
+      Display "When complete, enter blood pressure values from screen."
+      Display input fields for blood pressure
+      */
+    }
+
+    //sent measure heart rate
+    if(status==3){
+      /* Update Frontend:
+      Display "When complete, enter heart rate values from screen."
+      Display input fields for hr
+      */
+    }
+
+    //sent measure blood oxygen
+    if(status==4){
+      /* Update Frontend:
+      Display "Waiting"
+      Update again when blood oxygen is updated via post to vitals
+      */
+    }
+
+    //sent measure temperature
+    if(status==5){
+      /* Update Frontend:
+      Display "Waiting"
+      Update again when temperature is updated via post to vitals
+      */
+    }
+
+    //sent view blood pressure
+    if(status==6){
+   
+    }
+
+    //sent status check
+    if(status==7){
+
+    }
+
+    //sent collection complete
+    if(status==8){
+      /* Update Frontend:
+      Patient triaged!
+      */
+    }
+
+    status = 0 //action confirmed, reset status variable
+  }
+
+  else if(es_response == 2) //help pressed
+  {
+    //Send help signal to nurse station
+    //Update frontend
+  }
+
+  else if(es_response == 3) //error
+  {
+    //Report error to frontend
+  }
+
+
+});
+
+// Gets temperature and blood oxygen from the MCU 
+Router.post('/vitals', (req, res) => {
+  const temperature = req.body.temperature
+  const bloodOxygen = req.body.bloodOxygen
+
+  connection.query(`UPDATE visitation_information AS v1, (SELECT visitid FROM visitation_information WHERE ohip = '${ohip}' ORDER BY visitid DESC LIMIT 1) AS v2
+         SET PatientTemperature = '${temperature}', PatientBloodOxygen = '${bloodOxygen}' WHERE v1.visitid = v2.visitid`,(err,result)=> {
+            if (err) {console.log(err);} 
+            else {
+                res.send('result')
+                console.log("vital signs updated")
+            }} );
+
+  // Tell front end the submit value is now clickable
+  collectionReady = 1
+});
+
+
+/*
 Router.post('/status', (req, res) => {
 
   let es_response = req.body.es_response
@@ -160,6 +256,7 @@ Router.post('/status', (req, res) => {
   res.end()
 })
 
+*/
 
 Router.post("/createvital",(req,res)=>{
   const OHIP = req.body.patientOhip
