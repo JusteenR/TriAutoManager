@@ -160,6 +160,86 @@ Router.post('/status', (req, res) => {
   res.end()
 })
 
+
+Router.post("/createvital",(req,res)=>{
+  const OHIP = req.body.patientOhip
+  pool.getConnection(function(err, connection){
+      if (err) throw err;
+  
+      connection.query(`INSERT INTO visitation_information (OHIP,PatientBloodPressure, PatientBloodOxygen, PatientHeartRate, PatientTemperature, PatientRiskLevel) VALUES ('${OHIP}',0,0,0,0,0)`,
+      (err,result) => {if (err) {console.log(err);} else {res.send("Values Inserted into Visitation_information")}}
+      );
+    })
+  });
+
+Router.put("/vitalUpdate",(req,res)=>{
+  const OHIP = req.body.ohipNum
+  const PatientBloodPressure = req.body.vitalSigns.PatientBloodPressureSys + ',' + req.body.vitalSigns.PatientBloodPressureDia; 
+  const PatientHeartRate = req.body.vitalSigns.PatientHeartRate;
+
+  pool.getConnection(function(err, connection){
+      if (err) throw err;
+  
+      connection.query(`UPDATE visitation_information AS v1, (SELECT visitid FROM visitation_information WHERE ohip = '${OHIP}' ORDER BY visitid DESC LIMIT 1) AS v2
+       SET PatientBloodPressure = '${PatientBloodPressure}', PatientHeartRate = '${PatientHeartRate}' WHERE v1.visitid = v2.visitid`,(err,result)=> {
+          if (err) {console.log(err);} 
+          else {
+              res.send(result)
+              console.log("vital signs updated")
+          }} );
+    })
+});
+
+Router.put("/riskLevelUpdate",(req,res)=>{
+  const OHIP = req.body.OHIP
+  const PatientRiskLevel = req.body.RiskLevel 
+
+  pool.getConnection(function(err, connection){
+      if (err) throw err;
+  
+      connection.query(`UPDATE visitation_information AS v1, (SELECT visitid FROM visitation_information WHERE ohip = '${OHIP}' ORDER BY visitid DESC LIMIT 1) AS v2
+       SET PatientRiskLevel= '${PatientRiskLevel}' WHERE v1.visitid = v2.visitid)`,(err,result)=> {
+          if (err) {console.log(err);} 
+          else {
+              res.send(result)
+              console.log("risk Level updated")
+          }} );
+    })
+});
+
+// Embedded to backend
+Router.get('/statusESP/:esp_response', (req, res) => {
+
+let esp_response = req.params.esp_response
+esp_response = JSON.stringify(esp_response)
+
+if (status == 1){
+  // Start data collection
+  if (esp_response == 0){
+    frontEndSignal = 1
+    res.send('1')
+  } else if (esp_response == 1){
+    // Start frontend data collection screen but not allow user to click submit
+    collectionReady = 1
+  } else if (esp_response == 2){
+    // Help signal
+    collectionReady = 2
+    status = 1
+    res.send('2')
+    //status = 0 
+  } else if (esp_response == 3){
+    // Send signal to the nurse interface there is an error
+    collectionReady = 3
+    status = 1
+    //status = 0 
+    res.send('3')
+  }
+}
+
+
+// Ending the response
+res.end()
+})
 /*
 Router.get("/details/:patient", (req, res) => {
     var ohip = req.params.patient;
