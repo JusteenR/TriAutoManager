@@ -1,7 +1,7 @@
 const express = require("express");
 const Router = express.Router();
 const pool = require("../connection");
-var status = '1'
+var status = '0'
 var frontEndSignal = '0'
 var ohip = null
 var collectionReady = '0'
@@ -112,7 +112,7 @@ Router.post('/status', (req, res) => {
   let es_response = req.body.es_response
   console.log(es_response)
 
-  res.send('1')
+  //res.send('1')
 
   if(es_response == '0'){} //do nothing
 
@@ -121,6 +121,8 @@ Router.post('/status', (req, res) => {
     //sent begin collection
     if(status=='1')
     {
+      frontEndSignal='1'
+        
       /* Update Frontend: 
       Display "Running measurement routine"
       Display "When complete, enter blood pressure and heart rate values from screen."
@@ -190,6 +192,8 @@ Router.post('/status', (req, res) => {
   {
     //Report error to frontend
   }
+    
+  res.send('1')
 
 
 });
