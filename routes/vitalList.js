@@ -1,16 +1,16 @@
 const express = require("express");
 const Router = express.Router();
 const pool = require("../connection");
-var status = 1
-var frontEndSignal = 0
+var status = '1'
+var frontEndSignal = '0'
 var ohip = null
-var collectionReady = 0
+var collectionReady = '0'
 
 
 
 // Gets data collection signal from front end, front end makes post request to this endpoint
 Router.post('/collection', (req, res) => {
-    status = 1;
+    status = '1';
 });
 
 // Gets data collection signal from MCU
@@ -21,30 +21,15 @@ Router.post('/beginCollection', (req, res) => {
 
 // Allows user to submit vital sign info, front end makes get request to this endpoint
 Router.get('/collectionReady', (req, res) => {
-  if (collectionReady == 1){
-    res.send('1');
-    collectionReady = 0
-  } else if (collectionReady == 2){
-    res.send('2');
-    collectionReady = 0
-  } else if (collectionReady == 3){
-    res.send('3');
-    collectionReady = 0
+  res.send(collectionReady)
   }
-});
+);
 
 
 
 // Front end makes continuos get request to check if there is a start
 Router.get('/beginCollectionFront', (req, res) => {
-  if (frontEndSignal == 1) {
-      // Good to go
-      res.send('1')
-  }
-  else {
-      //Wait
-      res.send('0')
-  }
+  res.send(frontEndSignal)
 });
 
 
@@ -114,11 +99,11 @@ Router.put("/riskLevelUpdate",(req,res)=>{
 
 // Embedded to backend
 
-Router.get('/status', (req, res) => {
+Router.get('/status/:es_response', (req, res) => {
   console.log('Received poll from embedded\n')
-  res.send(status)
   console.log('Sent status: ')
   console.log(status)
+  res.send(status)
 })
 
 
@@ -127,12 +112,12 @@ Router.post('/status', (req, res) => {
   let es_response = req.body.es_response
   console.log(es_response)
 
-  if(es_response == 0){} //do nothing
+  if(es_response == '0'){} //do nothing
 
-  else if(es_response == 1) //confirmation
+  else if(es_response == '1') //confirmation
   {
     //sent begin collection
-    if(status==1)
+    if(status=='1')
     {
       /* Update Frontend: 
       Display "Running measurement routine"
@@ -142,7 +127,7 @@ Router.post('/status', (req, res) => {
     }
 
     //sent measure blood pressure
-    if(status==2){
+    if(status=='2'){
       /* Update Frontend:
       Display "When complete, enter blood pressure values from screen."
       Display input fields for blood pressure
@@ -150,7 +135,7 @@ Router.post('/status', (req, res) => {
     }
 
     //sent measure heart rate
-    if(status==3){
+    if(status=='3'){
       /* Update Frontend:
       Display "When complete, enter heart rate values from screen."
       Display input fields for hr
@@ -158,7 +143,7 @@ Router.post('/status', (req, res) => {
     }
 
     //sent measure blood oxygen
-    if(status==4){
+    if(status=='4'){
       /* Update Frontend:
       Display "Waiting"
       Update again when blood oxygen is updated via post to vitals
@@ -166,7 +151,7 @@ Router.post('/status', (req, res) => {
     }
 
     //sent measure temperature
-    if(status==5){
+    if(status=='5'){
       /* Update Frontend:
       Display "Waiting"
       Update again when temperature is updated via post to vitals
@@ -174,32 +159,32 @@ Router.post('/status', (req, res) => {
     }
 
     //sent view blood pressure
-    if(status==6){
+    if(status=='6'){
    
     }
 
     //sent status check
-    if(status==7){
+    if(status=='7'){
 
     }
 
     //sent collection complete
-    if(status==8){
+    if(status=='8'){
       /* Update Frontend:
       Patient triaged!
       */
     }
 
-    status = 0 //action confirmed, reset status variable
+    status = '0' //action confirmed, reset status variable
   }
 
-  else if(es_response == 2) //help pressed
+  else if(es_response == '2') //help pressed
   {
     //Send help signal to nurse station
     //Update frontend
   }
 
-  else if(es_response == 3) //error
+  else if(es_response == '3') //error
   {
     //Report error to frontend
   }
@@ -220,8 +205,10 @@ Router.post('/vitals', (req, res) => {
                 console.log("vital signs updated")
             }} );
 
+  // Sends MCU message that the vital signs are added to the database
+  status = '8'
   // Tell front end the submit value is now clickable
-  collectionReady = 1
+  collectionReady = '1'
 });
 
 
@@ -311,7 +298,7 @@ Router.get('/statusESP/:esp_response', (req, res) => {
   //esp_response = JSON.stringify(esp_response)
   console.log(esp_response==="1")
 
-  if (status == 1){
+  if (status == '1'){
     // Start data collection
     if (esp_response === "0"){
       frontEndSignal = 1
