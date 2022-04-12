@@ -210,35 +210,37 @@ Router.put("/riskLevelUpdate",(req,res)=>{
 // Embedded to backend
 Router.get('/statusESP/:esp_response', (req, res) => {
 
-let esp_response = req.params.esp_response
-esp_response = JSON.stringify(esp_response)
+  let esp_response = req.params.esp_response
+  //esp_response = JSON.stringify(esp_response)
+  console.log(esp_response==="1")
 
-if (status == 1){
-  // Start data collection
-  if (esp_response == 0){
-    frontEndSignal = 1
-    res.send('1')
-  } else if (esp_response == 1){
-    // Start frontend data collection screen but not allow user to click submit
-    collectionReady = 1
-  } else if (esp_response == 2){
-    // Help signal
-    collectionReady = 2
-    status = 1
-    res.send('2')
-    //status = 0 
-  } else if (esp_response == 3){
-    // Send signal to the nurse interface there is an error
-    collectionReady = 3
-    status = 1
-    //status = 0 
-    res.send('3')
+  if (status == 1){
+    // Start data collection
+    if (esp_response === "0"){
+      frontEndSignal = 1
+      res.send('0')
+    } else if (esp_response === "1"){
+      // Start frontend data collection screen but not allow user to click submit
+      collectionReady = 1
+      res.send('1')
+    } else if (esp_response === "2"){
+      // Help signal
+      collectionReady = 2
+      status = 1
+      res.send('2')
+      //status = 0 
+    } else if (esp_response === "3"){
+      // Send signal to the nurse interface there is an error
+      collectionReady = 3
+      status = 1
+      //status = 0 
+      res.send('3')
+    }
   }
-}
 
 
-// Ending the response
-res.end()
+  // Ending the response
+  res.end()
 })
 /*
 Router.get("/details/:patient", (req, res) => {
